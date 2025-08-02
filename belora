@@ -5,15 +5,58 @@
 #  / _  / -_) / _ \/ __/ _ `/
 # /____/\__/_/\___/_/  \_,_/ 
 
+declare -a NAMES=(
+    "D.Va"
+    "Doomfist"
+    "Reinhardt"
+    "Roadhog"
+    "Winston"
+    "Zarya"
+    "Bastion"
+    "McCree"
+    "Echo"
+    "Genji"
+    "Hanzo"
+    "Junkrat"
+    "Mei"
+    "Pharah"
+    "Reaper"
+    "Sojourn"
+    "Soldier"
+    "Sombra"
+    "Symmetra"
+    "Torbjörn"
+    "Tracer"
+    "Ana"
+    "Brigitte"
+    "Lúcio"
+    "Mercy"
+    "Moira"
+    "Zenyatta"
+)
 
-if [[ -z "${TMUX+x}" ]]; then
-    mapfile -t sessions < <( tmux list-sessions )
-
-    for (( i = 0; i < 65536; i++ )); do
-        if [[ ! "${sessions[*]/:*/}" =~ "${i}" ]]; then
-            exec tmux new-session -s "${i}" "${@}"
-        fi
-    done
-else
+if [[ -n "${TMUX+x}" ]]; then
     exec "${@}"
 fi
+
+mapfile -t sessions < <( tmux list-sessions )
+
+if [[ -z "${1}" ]]; then
+    for session in "${sessions[@]}"; do
+        if [[ ! "$session" =~ "attached" ]]; then
+            exec tmux attach-session -t "${session/:*/}"
+        fi
+    done
+fi
+
+if [[ "${#sessions[@]}" -ge "${#NAMES[@]}" ]]; then
+    exit 1
+fi
+
+name="${NAMES[RANDOM % ${#NAMES[@]}]}"
+
+while [[ "${sessions[*]}" =~ "${name}" ]]; do
+    name="${NAMES[RANDOM % ${#NAMES[@]}]}"
+done
+
+exec tmux new-session -s "${name}" "${@}"
