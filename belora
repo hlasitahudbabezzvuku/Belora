@@ -1,0 +1,19 @@
+#!/usr/bin/env -S bash --norc --noprofile
+
+#    ___      __             
+#   / _ )___ / /__  _______ _
+#  / _  / -_) / _ \/ __/ _ `/
+# /____/\__/_/\___/_/  \_,_/ 
+
+
+if [[ -z "${TMUX+x}" ]]; then
+    mapfile -t sessions < <( tmux list-sessions )
+
+    for (( i = 0; i < 65536; i++ )); do
+        if [[ ! "${sessions[*]/:*/}" =~ "${i}" ]]; then
+            exec tmux new-session -s "${i}" "${@}"
+        fi
+    done
+else
+    exec "${@}"
+fi
