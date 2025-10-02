@@ -28,18 +28,23 @@ readonly -a BELORA_NAMES=(               # List of names that are used for selec
     "D.Va"
     "Mei"
     "Genji"
+    "scout"
 )
 
 # Do nothing if already inside TMUX session
-if [[ -z "${TMUX+x}" ]] && [[ -z "${SESSION+x}" ]]; then
-    exec "${@}"
+if ! [[ -z "${TMUX+x}" ]] || ! [[ -z "${SESSION+x}" ]]; then
+    if [[ "${#}" -gt 0 ]]; then
+        exec "${@}"
+    else
+        exit 1
+    fi
 fi
 
 mapfile -t session_names < <( shuf -e "${BELORA_NAMES[@]}" )
-mapfile -t sessions < <( tmux -S "${BELORA_SERVER}" list-sessions )
+mapfile -t sessions < <( tmux -S "${BELORA_SERVER}" list-sessions || printf "" )
 
 #  If no argument ware passed
-if [[ "${#}" -gt 1 ]]; then
+if [[ "${#}" -lt 1 ]]; then
     for session in "${sessions[@]}"; do
         if [[ ! "$session" =~ "attached" ]]; then
             exec tmux -S "${BELORA_SERVER}" attach-session -t "${session/:*/}"
@@ -58,6 +63,4 @@ for name in "${session_names[@]}"; do
         exec tmux -S "${BELORA_SERVER}" new-session -s "${name}" "${@}"
     fi
 done
-
-exec bash --norc --noprofile
 
